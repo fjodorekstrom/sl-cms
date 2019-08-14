@@ -1,0 +1,102 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "version" : "2019-08-14T11:13:25Z",
+    "title" : "apis3-proxy"
+  },
+  "host" : "${ApiId}.execute-api.${Region}.amazonaws.com",
+  "basePath" : "/",
+  "schemes" : [ "https" ],
+  "paths" : {
+    "/{item}" : {
+      "get" : {
+        "produces" : [ "text/html", "application/json" ],
+        "parameters" : [ {
+          "name" : "Content-Type",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "item",
+          "in" : "path",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "name" : "Content-Disposition",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "200 response",
+            "schema" : {
+              "$ref" : "#/definitions/Empty"
+            },
+            "headers" : {
+              "Content-Disposition" : {
+                "type" : "string"
+              },
+              "Content-Type" : {
+                "type" : "string"
+              }
+            }
+          },
+          "404" : {
+            "description" : "404 response",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            },
+            "headers" : {
+              "Content-Disposition" : {
+                "type" : "string"
+              },
+              "Content-Type" : {
+                "type" : "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration" : {
+          "credentials" : "arn:aws:iam::070098161432:role/APIGatewayS3Policy",
+          "uri" : "arn:aws:apigateway:eu-west-1:s3:path/s3apigwtest/{item}",
+          "responses" : {
+            "200" : {
+              "statusCode" : "200",
+              "responseParameters" : {
+                "method.response.header.Content-Disposition" : "integration.response.header.Content-Disposition",
+                "method.response.header.Content-Type" : "integration.response.header.Content-Type"
+              }
+            },
+            "404" : {
+              "statusCode" : "404"
+            }
+          },
+          "requestParameters" : {
+            "integration.request.header.Content-Disposition" : "method.request.header.Content-Disposition",
+            "integration.request.path.item" : "method.request.path.item",
+            "integration.request.header.Content-Type" : "method.request.header.Content-Type"
+          },
+          "passthroughBehavior" : "when_no_match",
+          "httpMethod" : "GET",
+          "type" : "aws"
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "Empty" : {
+      "type" : "object",
+      "title" : "Empty Schema"
+    },
+    "Error" : {
+      "type" : "object",
+      "properties" : {
+        "message" : {
+          "type" : "string"
+        }
+      },
+      "title" : "Error Schema"
+    }
+  }
+}

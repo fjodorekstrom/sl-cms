@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  SAM Template for sam-app Api Gateway S3 proxy
+
+Parameters:
+
+  ApiGatewayS3ProxyBucketName:
+    Type: String
+    Default: fjodors-apigateway-s3-proxybucket
+
+  APIStagingName:
+    Type: String
+    Default: fjorkmaster
+  
+  APISpecBucketPath:
+    Type: String
+    Default: fjodors3apigatewayproxy
+
+Resources:
+  ApiGatewayS3Proxy:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref APIStagingName
+      DefinitionUri:
+        Bucket: !Sub "${APISpecBucketPath}"
+        Key: swagger.json
+      Variables:
+        IntegrationBucketArn: !Ref ApiGatewayS3ProxyBucket
+        IntegrationBucketName: !Ref ApiGatewayS3ProxyBucketName
+        ApiUrl: !Sub "https://${ApiGatewayS3Proxy}.execute-api.${AWS::Region}.amazonaws.com/${APIStagingName}/"
+        ApiId: !Ref ApiGatewayS3Proxy
+        Region: AWS::Region
+        ApiStagingName: !Sub "${APIStagingName}"
+
+
+  # S3ApigatewayProxyRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Statement:
+  #       - Action: ['sts:AssumeRole']
+  #         Effect: Allow
+  #         Principal:
+  #           Service: [apigateway.amazonaws.com]
+
+  # ProxyBucketApiGatewayPolicy:
+  #   Type: AWS::IAM::Policy
+  #   Properties:
+  #     PolicyName: ProxyBucketPolicy
+  #     Roles: [!Ref 'S3ApigatewayProxyRole']
+  #     PolicyDocument:
+  #       Statement:
+  #       - Action: ['s3:Get*', 's3:List*']
+  #         Effect: Allow
+  #         Resource:
+  #         - !Sub "arn:aws:s3:::${!Ref ApiGatewayS3ProxyBucket}"
+
+  ApiGatewayS3ProxyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Ref ApiGatewayS3ProxyBucketName
+      WebsiteConfiguration:
+        IndexDocument: "index.html"
+        ErrorDocument: "error.html"
+    DeletionPolicy: Retain
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  ProxyBucketArn:
+    Description: "S3 Proxy Bucket ARN"
+    Value: !Ref ApiGatewayS3ProxyBucket
+  ProxyBucketURL:
+    Description: "The Amazon S3 website endpoint for ProxyBucket"
+    Value: !GetAtt ApiGatewayS3ProxyBucket.WebsiteURL
+  ApiUrl:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ApiGatewayS3Proxy}.execute-api.${AWS::Region}.amazonaws.com/${APIStagingName}/"
+  ApiId:
+    Description: "API Gateway Id"
+    Value: !Ref ApiGatewayS3Proxy
+# TODO; Output Api Arn
